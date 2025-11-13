@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ВЕТРИНА | Косметика та догляд</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Preloader -->
+    <div class="preloader" id="preloader">
+        <div class="preloader-content">
+            <div class="logo-loader">
+                <span class="logo-text">ВЕТРИНА</span>
+                <span class="logo-subtext">COSMETICS</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header__inner">
+                <div class="header__logo">
+                    <span class="logo__text">ВЕТРИНА</span>
+                    <span class="logo__subtext">COSMETICS</span>
+                </div>
+                
+                <nav class="nav">
+                    <ul class="nav__list">
+                        <li><a href="#" class="nav__link active" data-category="all">Всі товари</a></li>
+                        <li><a href="#" class="nav__link" data-category="face">Обличчя</a></li>
+                        <li><a href="#" class="nav__link" data-category="hair">Волосся</a></li>
+                        <li><a href="#" class="nav__link" data-category="body">Тіло</a></li>
+                        <li><a href="#" class="nav__link" data-category="makeup">Макіяж</a></li>
+                    </ul>
+                </nav>
+
+                <div class="header__actions">
+                    <button class="action-btn booking-btn" id="bookingToggle">
+                        <i class="fas fa-calendar-check"></i>
+                        Забронювати
+                    </button>
+
+                    <button class="burger" id="burgerToggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Banner -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Якісна косметика для вашого догляду</h1>
+                <p>Відкрийте світ натуральної косметики та професійного догляду</p>
+                <button class="btn-primary" onclick="veterina.showCategory('all')">
+                    <i class="fas fa-star"></i>
+                    Перейти до каталогу
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Categories -->
+    <section class="quick-categories">
+        <div class="container">
+            <div class="categories-grid">
+                <div class="category-card" data-category="face">
+                    <div class="category-icon">
+                        <i class="fas fa-spa"></i>
+                    </div>
+                    <h3>Догляд за обличчям</h3>
+                    <p>Креми, сироватки, маски</p>
+                </div>
+                
+                <div class="category-card" data-category="hair">
+                    <div class="category-icon">
+                        <i class="fas fa-air-freshener"></i>
+                    </div>
+                    <h3>Догляд за волоссям</h3>
+                    <p>Шампуні, кондиціонери, маски</p>
+                </div>
+                
+                <div class="category-card" data-category="body">
+                    <div class="category-icon">
+                        <i class="fas fa-hand-sparkles"></i>
+                    </div>
+                    <h3>Догляд за тілом</h3>
+                    <p>Гелі, лосьйони, скраби</p>
+                </div>
+                
+                <div class="category-card" data-category="makeup">
+                    <div class="category-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h3>Декоративна косметика</h3>
+                    <p>Помади, туши, тональні засоби</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 id="section-title">Всі товари</h2>
+                <div class="products-controls">
+                    <div class="sort-options">
+                        <select id="sortSelect">
+                            <option value="default">За замовчуванням</option>
+                            <option value="price-asc">Ціна: від низької</option>
+                            <option value="price-desc">Ціна: від високої</option>
+                            <option value="name">За назвою</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-grid" id="products-grid">
+                <!-- Products will be loaded here -->
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-state" id="productsLoading">
+                <div class="loading-spinner"></div>
+                <p>Завантаження товарів...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature">
+                    <i class="fas fa-truck"></i>
+                    <h4>Безкоштовна доставка</h4>
+                    <p>Від 500₴ по всій Україні</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-shield-alt"></i>
+                    <h4>Гарантія якості</h4>
+                    <p>100% оригінальна продукція</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-undo"></i>
+                    <h4>Легкий повернення</h4>
+                    <p>Протягом 14 днів</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-headset"></i>
+                    <h4>Підтримка 24/7</h4>
+                    <p>Консультації та допомога</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="logo-text">ВЕТРИНА</span>
+                        <span class="logo-subtext">COSMETICS</span>
+                    </div>
+                    <p>Якісна косметика та професійний догляд для кожного</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Контакти</h4>
+                    <p><i class="fas fa-phone"></i> +38 (063) 123-45-67</p>
+                    <p><i class="fas fa-envelope"></i> info@veterina.com</p>
+                    <p><i class="fas fa-map-marker-alt"></i> м. Київ, вул. Хрещатик, 1</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Графік роботи</h4>
+                    <p>Пн-Нд: 9:00 - 21:00</p>
+                    <p>Без вихідних</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 ВЕТРИНА COSMETICS. Всі права захищені.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Booking Modal -->
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="booking-modal" id="bookingModal">
+        <div class="booking-modal__content">
+            <div class="booking-header">
+                <h3><i class="fas fa-calendar-check"></i> Бронювання товару</h3>
+                <button class="close-btn" id="closeBooking">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form class="booking-form" id="bookingForm">
+                <div class="form-group">
+                    <label for="name"><i class="fas fa-user"></i> Ваше ім'я *</label>
+                    <input type="text" id="name" name="name" required placeholder="Введіть ваше ім'я">
+                    <div class="error-message" id="nameError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="email" name="email" placeholder="your@email.com">
+                    <div class="error-message" id="emailError"></div>
+                </div>
+
+                <div class="form-group" id="phoneGroup">
+                    <label for="phone"><i class="fas fa-phone"></i> Телефон *</label>
+                    <input type="tel" id="phone" name="phone" required placeholder="+38 (XXX) XXX-XX-XX">
+                    <div class="error-message" id="phoneError">Будь ласка, введіть коректний номер телефону</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="product"><i class="fas fa-shopping-bag"></i> Товар *</label>
+                    <select id="product" name="product" required>
+                        <option value="">Оберіть товар</option>
+                        <option value="Крем для обличчя">Крем для обличчя</option>
+                        <option value="Шампунь">Шампунь</option>
+                        <option value="Кондиціонер">Кондиціонер</option>
+                        <option value="Маска для волосся">Маска для волосся</option>
+                        <option value="Гель для душу">Гель для душу</option>
+                        <option value="Помада">Помада</option>
+                        <option value="Туш для вій">Туш для вій</option>
+                        <option value="Тонова основа">Тонова основа</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity"><i class="fas fa-box"></i> Кількість</label>
+                    <select id="quantity" name="quantity">
+                        <option value="1">1 шт</option>
+                        <option value="2">2 шт</option>
+                        <option value="3">3 шт</option>
+                        <option value="4">4 шт</option>
+                        <option value="5+">5+ шт</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="message"><i class="fas fa-comment"></i> Додаткові побажання</label>
+                    <textarea id="message" name="message" rows="4" placeholder="Ваші побажання щодо замовлення..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <span class="btn-text">Забронювати товар</span>
+                    <div class="btn-loading" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> Відправка...
+                    </div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification System -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
