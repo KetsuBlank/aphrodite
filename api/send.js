@@ -16,7 +16,6 @@ module.exports = async (req, res) => {
     
     console.log('Received booking:', { name, phone, email, product, quantity });
 
-    // Валидация
     if (!name || !phone || !product) {
       return res.status(400).json({ 
         success: false, 
@@ -38,7 +37,6 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Формируем сообщение для Telegram
     const telegramMessage = `
 🎯 *НОВА ЗАЯВКА НА БРОНЮВАННЯ*
 
@@ -54,7 +52,6 @@ module.exports = async (req, res) => {
 ⏰ *Час:* ${new Date().toLocaleString('uk-UA')}
     `;
 
-    // Отправляем в Telegram
     const telegramResponse = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: {
