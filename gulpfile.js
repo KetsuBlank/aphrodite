@@ -4,7 +4,6 @@ const minify = require('gulp-minify');
 const cleanCSS = require('gulp-clean-css');
 const autoprefixer = require('gulp-autoprefixer');
 
-// Объединение и минификация CSS
 gulp.task('styles', function() {
     return gulp.src([
         'src/css/components/*.css',
@@ -16,7 +15,6 @@ gulp.task('styles', function() {
     .pipe(gulp.dest('dist/css'));
 });
 
-// Объединение и минификация JS
 gulp.task('scripts', function() {
     return gulp.src([
         'src/js/modules/*.js',
@@ -27,21 +25,17 @@ gulp.task('scripts', function() {
     .pipe(gulp.dest('dist/js'));
 });
 
-// Копирование HTML
 gulp.task('html', function() {
     return gulp.src('src/*.html')
         .pipe(gulp.dest('dist'));
 });
 
-// Слежение за изменениями
 gulp.task('watch', function() {
     gulp.watch('src/css/**/*.css', gulp.series('styles'));
     gulp.watch('src/js/**/*.js', gulp.series('scripts'));
     gulp.watch('src/*.html', gulp.series('html'));
 });
 
-// Сборка проекта
 gulp.task('build', gulp.parallel('styles', 'scripts', 'html'));
 
-// Задача по умолчанию
 gulp.task('default', gulp.series('build', 'watch'));

@@ -7,7 +7,6 @@ module.exports = async (req, res) => {
   console.log('Token exists:', !!token);
   console.log('Chat ID exists:', !!chatId);
   
-  // Проверим формат токена (первые 10 символов)
   console.log('Token preview:', token ? token.substring(0, 10) + '...' : 'MISSING');
   
   return res.status(200).json({ 
