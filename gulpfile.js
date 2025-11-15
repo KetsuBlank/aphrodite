@@ -31,5 +31,11 @@ gulp.task('html', function() {
         .pipe(gulp.dest('dist'));
 });
 
+// Копирование JS файлов как есть (страховка)
+gulp.task('copy-js', function() {
+    return gulp.src('src/js/**/*.js')
+        .pipe(gulp.dest('dist/js'));
+});
+
 // Сборка проекта
-gulp.task('build', gulp.parallel('styles', 'scripts', 'html'));
+gulp.task('build', gulp.parallel('styles', 'scripts', 'html', 'copy-js'));
