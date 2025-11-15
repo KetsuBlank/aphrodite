@@ -3,13 +3,10 @@
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+      "use": "@vercel/static-build"
     },
     {
-      "src": "api/**/*.js", 
+      "src": "api/**/*.js",
       "use": "@vercel/node"
     }
   ],
@@ -19,12 +16,8 @@
       "dest": "/api/$1"
     },
     {
-      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|json))",
-      "dest": "/dist/$1"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/dist/index.html"
+      "dest": "/dist/$1"
     }
   ],
   "buildCommand": "npm run build",
