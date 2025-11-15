@@ -3,14 +3,14 @@ const https = require('https');
 
 function parseJsonBody(req) {
   return new Promise((resolve, reject) => {
-    // If Vercel/Node already parsed body (object), use it
-    if (req.body && typeof req.body === 'object' && Object.keys(req.body).length) {
+    // Если Vercel уже распарсил body (например, когда используется bodyParser),
+    // то req.body будет объектом — используем его.
+    if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
       return resolve(req.body);
     }
 
-    // Otherwise collect raw body
     let data = '';
-    req.on('data', chunk => { data += chunk; });
+    req.on('data', chunk => data += chunk);
     req.on('end', () => {
       if (!data) return resolve({});
       try {
@@ -23,7 +23,8 @@ function parseJsonBody(req) {
   });
 }
 
-module.exports = async function handler(req, res) {
+module.exports = async (req, res) => {
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -31,40 +32,54 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
 
-  // Parse body (supports both already-parsed and raw)
+  // Парсим тело
   let body;
   try {
     body = await parseJsonBody(req);
   } catch (err) {
+    console.error('parse body error:', err);
     return res.status(400).json({ success: false, error: 'Invalid JSON body' });
   }
 
-  const { name, phone, product, email = '', quantity = '1', message = '' } = body || {};
+  const {
+    name,
+    phone,
+    // фронт у тебя использует service/budget/deadline/message/email — подхватим их
+    email = '',
+    service,
+    budget = '',
+    deadline = '',
+    message = ''
+  } = body || {};
 
-  if (!name || !phone || !product) {
-    return res.status(400).json({ success: false, error: 'Заповніть обовʼязкові поля: імʼя, телефон та товар' });
+  if (!name || !service || !message) {
+    return res.status(400).json({ success: false, error: 'Заповніть обовʼязкові поля: імʼя, послуга та опис проекту' });
   }
 
-  const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
-  const CHAT_ID = process.env.CHAT_ID;
+  // Поддерживаем оба варианта имён env (на случай несовпадения)
+  const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN || null;
+  const CHAT_ID = process.env.CHAT_ID || process.env.TELEGRAM_CHAT_ID || null;
 
   if (!TELEGRAM_TOKEN || !CHAT_ID) {
+    console.error('Telegram env missing. TELEGRAM_TOKEN:', !!TELEGRAM_TOKEN, 'CHAT_ID:', !!CHAT_ID);
     return res.status(500).json({ success: false, error: 'Telegram бот не налаштований на сервері' });
   }
 
-  const telegramText = [
-    '📌 Нова бронь з сайту Veterina Cosmetics',
+  // Формируем текст сообщения — аккуратно с пустыми полями
+  const lines = [
+    '📌 Нова заявка з сайту',
     `*Імʼя:* ${String(name)}`,
-    `*Телефон:* ${String(phone)}`,
+    phone ? `*Телефон:* ${String(phone)}` : '',
     email ? `*Email:* ${String(email)}` : '',
-    `*Товар:* ${String(product)}`,
-    `*Кількість:* ${String(quantity)}`,
-    message ? `*Повідомлення:* ${String(message)}` : ''
+    service ? `*Послуга:* ${String(service)}` : '',
+    budget ? `*Бюджет:* ${String(budget)}` : '',
+    deadline ? `*Терміни:* ${String(deadline)}` : '',
+    message ? `*Опис проекту:* ${String(message)}` : ''
   ].filter(Boolean).join('\n');
 
   const payload = JSON.stringify({
     chat_id: CHAT_ID,
-    text: telegramText,
+    text: lines,
     parse_mode: 'Markdown'
   });
 
@@ -77,43 +92,43 @@ module.exports = async function handler(req, res) {
       'Content-Type': 'application/json',
       'Content-Length': Buffer.byteLength(payload)
     },
-    timeout: 10000 // 10s
+    timeout: 10000
   };
 
   try {
-    const telegramResponse = await new Promise((resolve, reject) => {
-      const request = https.request(options, (tgRes) => {
+    const tgResp = await new Promise((resolve, reject) => {
+      const r = https.request(options, (tgRes) => {
         let resp = '';
         tgRes.on('data', chunk => resp += chunk);
         tgRes.on('end', () => {
+          if (!resp) return resolve({});
           try {
-            const json = JSON.parse(resp || '{}');
-            resolve(json);
-          } catch (e) {
-            reject(new Error('Invalid response from Telegram'));
+            return resolve(JSON.parse(resp));
+          } catch (err) {
+            return reject(new Error('Invalid JSON from Telegram'));
           }
         });
       });
 
-      request.on('error', err => reject(err));
-      request.on('timeout', () => {
-        request.destroy();
-        reject(new Error('Request to Telegram timed out'));
+      r.on('error', err => reject(err));
+      r.on('timeout', () => {
+        r.destroy();
+        reject(new Error('Telegram request timed out'));
       });
 
-      request.write(payload);
-      request.end();
+      r.write(payload);
+      r.end();
     });
 
-    if (telegramResponse && telegramResponse.ok) {
+    if (tgResp && tgResp.ok) {
       return res.status(200).json({ success: true, message: '✅ Заявку успішно відправлено!' });
     } else {
-      const descr = (telegramResponse && telegramResponse.description) || 'Telegram API error';
-      console.error('Telegram API error:', descr, telegramResponse);
+      const descr = (tgResp && tgResp.description) || 'Telegram API error';
+      console.error('Telegram error:', descr, tgResp);
       return res.status(500).json({ success: false, error: descr });
     }
   } catch (err) {
-    console.error('send.js error:', err);
+    console.error('send handler error:', err);
     return res.status(500).json({ success: false, error: 'Помилка при відправці заявки. Спробуйте пізніше.' });
   }
 };
