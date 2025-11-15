@@ -169,30 +169,31 @@ class VeterinaCosmetics {
     }
 
     validatePhone(phone) {
-        const phoneGroup = document.getElementById('phoneGroup');
-        const phoneError = document.getElementById('phoneError');
-        
-        if (!phone) {
-            phoneGroup.classList.remove('error', 'success');
-            phoneError.style.display = 'none';
-            return false;
-        }
-        
-        const phoneRegex = /^(\+38|38|0)?\d{9}$/;
-        const cleanedPhone = phone.replace(/\D/g, '');
-        
-        if (phoneRegex.test(cleanedPhone) && cleanedPhone.length >= 9) {
-            phoneGroup.classList.remove('error');
-            phoneGroup.classList.add('success');
-            phoneError.style.display = 'none';
-            return true;
-        } else {
-            phoneGroup.classList.remove('success');
-            phoneGroup.classList.add('error');
-            phoneError.style.display = 'block';
-            return false;
-        }
+    const phoneGroup = document.getElementById('phoneGroup');
+    const phoneError = document.getElementById('phoneError');
+    
+    if (!phone) {
+        phoneGroup.classList.remove('error', 'success');
+        phoneError.style.display = 'none';
+        return false;
     }
+    
+    // Упрощенная валидация - проверяем что номер содержит достаточно цифр
+    const cleanedPhone = phone.replace(/\D/g, '');
+    
+    // Украинские номера: 9 цифр без кода или 12 цифр с кодом
+    if (cleanedPhone.length >= 9 && cleanedPhone.length <= 12) {
+        phoneGroup.classList.remove('error');
+        phoneGroup.classList.add('success');
+        phoneError.style.display = 'none';
+        return true;
+    } else {
+        phoneGroup.classList.remove('success');
+        phoneGroup.classList.add('error');
+        phoneError.style.display = 'block';
+        return false;
+    }
+}
 
     setupMobileMenu() {
         const burger = document.getElementById('burgerToggle');
