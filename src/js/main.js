@@ -238,7 +238,7 @@ class VeterinaCosmetics {
     }
 
     quickBook(productName) {
-        const productSelect = document.getElementById('product');
+        const productSelect = document.getElementById('service');
         if (productSelect) {
             const optionExists = Array.from(productSelect.options).some(option => option.value === productName);
             if (optionExists) productSelect.value = productName;
@@ -293,14 +293,14 @@ class VeterinaCosmetics {
                     name:document.getElementById('name').value.trim(),
                     email:document.getElementById('email').value.trim(),
                     phone:document.getElementById('phone').value.trim(),
-                    product:document.getElementById('service').value,
+                    service:document.getElementById('service').value,
                     budget:document.getElementById('budget').value,
                     deadline:document.getElementById('deadline').value,
                     message:document.getElementById('message').value.trim()
                 };
 
-                if(!formData.name||!formData.phone||!formData.product){
-                    alert('Заповніть обовʼязкові поля: імʼя, телефон та товар'); return;
+                if(!formData.name||!formData.phone||!formData.service){
+                    alert('Заповніть обовʼязкові поля: імʼя, телефон та послугу'); return;
                 }
 
                 if(!validatePhone(formData.phone)){alert('Будь ласка, введіть коректний номер телефону'); return;}
