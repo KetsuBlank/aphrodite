@@ -169,31 +169,31 @@ class VeterinaCosmetics {
     }
 
     validatePhone(phone) {
-    const phoneGroup = document.getElementById('phoneGroup');
-    const phoneError = document.getElementById('phoneError');
-    
-    if (!phone) {
-        phoneGroup.classList.remove('error', 'success');
-        phoneError.style.display = 'none';
-        return false;
+        const phoneGroup = document.getElementById('phoneGroup');
+        const phoneError = document.getElementById('phoneError');
+        
+        if (!phone) {
+            phoneGroup.classList.remove('error', 'success');
+            phoneError.style.display = 'none';
+            return false;
+        }
+        
+        // Упрощенная валидация - проверяем что номер содержит достаточно цифр
+        const cleanedPhone = phone.replace(/\D/g, '');
+        
+        // Украинские номера: 9 цифр без кода или 12 цифр с кодом
+        if (cleanedPhone.length >= 9 && cleanedPhone.length <= 12) {
+            phoneGroup.classList.remove('error');
+            phoneGroup.classList.add('success');
+            phoneError.style.display = 'none';
+            return true;
+        } else {
+            phoneGroup.classList.remove('success');
+            phoneGroup.classList.add('error');
+            phoneError.style.display = 'block';
+            return false;
+        }
     }
-    
-    // Упрощенная валидация - проверяем что номер содержит достаточно цифр
-    const cleanedPhone = phone.replace(/\D/g, '');
-    
-    // Украинские номера: 9 цифр без кода или 12 цифр с кодом
-    if (cleanedPhone.length >= 9 && cleanedPhone.length <= 12) {
-        phoneGroup.classList.remove('error');
-        phoneGroup.classList.add('success');
-        phoneError.style.display = 'none';
-        return true;
-    } else {
-        phoneGroup.classList.remove('success');
-        phoneGroup.classList.add('error');
-        phoneError.style.display = 'block';
-        return false;
-    }
-}
 
     setupMobileMenu() {
         const burger = document.getElementById('burgerToggle');
@@ -430,6 +430,15 @@ class VeterinaCosmetics {
         this.setButtonLoading(submitBtn, true);
 
         try {
+            // Временно сохраняем заявку в консоль
+            console.log('📦 Заявка:', formData);
+            
+            // Показываем успех без отправки на сервер
+            this.showNotification('success', '✅ Заявку успішно відправлено! Ми звʼяжемося з вами найближчим часом.');
+            document.getElementById('bookingForm').reset();
+            this.toggleBooking(false);
+            
+            /* Раскомментируй когда настроишь Telegram бота:
             const response = await fetch('/api/send', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -439,12 +448,14 @@ class VeterinaCosmetics {
             const data = await response.json();
             
             if (data.success) {
-                this.showNotification('success', data.message || '✅ Заявку успішно відправлено! Ми звʼяжемося з вами найближчим часом.');
+                this.showNotification('success', data.message || '✅ Заявку успішно відправлено!');
                 document.getElementById('bookingForm').reset();
                 this.toggleBooking(false);
             } else {
                 this.showNotification('error', data.error || '❌ Помилка відправки заявки');
             }
+            */
+            
         } catch (error) {
             console.error('Помилка:', error);
             this.showNotification('error', '❌ Помилка мережі. Спробуйте ще раз.');
