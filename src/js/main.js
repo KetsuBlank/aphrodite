@@ -130,6 +130,14 @@ class VeterinaCosmetics {
                 });
             });
         });
+
+        // Добавляем обработчик для кнопки в герое
+        const catalogBtn = document.getElementById('catalogBtn');
+        if (catalogBtn) {
+            catalogBtn.addEventListener('click', () => {
+                this.showCategory('all');
+            });
+        }
     }
 
     setupBooking() {

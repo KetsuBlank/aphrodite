@@ -4,14 +4,9 @@ module.exports = async (req, res) => {
   const token = process.env.TELEGRAM_TOKEN;
   const chatId = process.env.CHAT_ID;
   
-  console.log('Token exists:', !!token);
-  console.log('Chat ID exists:', !!chatId);
-  
-  console.log('Token preview:', token ? token.substring(0, 10) + '...' : 'MISSING');
-  
   return res.status(200).json({ 
-    telegram_token: token ? 'SET (' + token.substring(0, 10) + '...)' : 'MISSING',
-    chat_id: chatId || 'MISSING',
+    telegram_token: token ? 'SET' : 'MISSING',
+    chat_id: chatId ? 'SET' : 'MISSING',
     status: token && chatId ? 'READY' : 'MISSING_VARS'
   });
 };

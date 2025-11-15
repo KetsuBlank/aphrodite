@@ -8,14 +8,13 @@ module.exports = async (req, res) => {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Метод не разрешен' });
   }
 
   try {
-    const { name, phone, email, product, quantity, message } = req.body;
-    
-    console.log('Received booking:', { name, phone, email, product, quantity });
+    const { name, email, phone, product, quantity, message } = req.body;
 
+    // Валидация обязательных полей
     if (!name || !phone || !product) {
       return res.status(400).json({ 
         success: false, 
@@ -23,20 +22,19 @@ module.exports = async (req, res) => {
       });
     }
 
+    // Проверка переменных окружения
     const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
     const CHAT_ID = process.env.CHAT_ID;
 
     if (!TELEGRAM_TOKEN || !CHAT_ID) {
-      console.error('Missing environment variables:', {
-        token: !!TELEGRAM_TOKEN,
-        chatId: !!CHAT_ID
-      });
-      return res.status(500).json({ 
+      console.log('Missing environment variables');
+      return res.status(200).json({ 
         success: false, 
-        error: 'Серверна помилка: не налаштовано отримання заявок' 
+        error: 'Бот не настроен. Пожалуйста, сообщите администратору.' 
       });
     }
 
+    // Формируем сообщение для Telegram
     const telegramMessage = `
 🎯 *НОВА ЗАЯВКА НА БРОНЮВАННЯ*
 
@@ -52,6 +50,7 @@ module.exports = async (req, res) => {
 ⏰ *Час:* ${new Date().toLocaleString('uk-UA')}
     `;
 
+    // Отправка в Telegram
     const telegramResponse = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: {
