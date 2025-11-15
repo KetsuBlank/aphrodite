@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "name": "veterina-cosmetics",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ],
+  "env": {
+    "TELEGRAM_TOKEN": "@veterina-telegram-token",
+    "CHAT_ID": "@veterina-chat-id"
+  }
+}
