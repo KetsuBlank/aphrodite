@@ -299,6 +299,9 @@ class VeterinaCosmetics {
                     message:document.getElementById('message').value.trim()
                 };
 
+                console.log('🔍 ДИАГНОСТИКА: Отправка данных:', formData);
+                console.log('🔍 ДИАГНОСТИКА: URL:', '/api/send');
+
                 if(!formData.name||!formData.phone||!formData.service){
                     alert('Заповніть обовʼязкові поля: імʼя, телефон та товар'); return;
                 }
@@ -314,12 +317,16 @@ class VeterinaCosmetics {
                 submitBtn.disabled=true;
 
                 try{
+                    console.log('🔍 ДИАГНОСТИКА: Начинаем fetch запрос');
                     const response=await fetch('/api/send',{
                         method:'POST',
                         headers:{'Content-Type':'application/json'},
                         body:JSON.stringify(formData)
                     });
+                    console.log('🔍 ДИАГНОСТИКА: Получен ответ:', response.status);
                     const data=await response.json();
+                    console.log('🔍 ДИАГНОСТИКА: Данные ответа:', data);
+                    
                     if(data.success){
                         alert('✅ Заявку успішно відправлено!'); 
                         form.reset(); 
@@ -328,7 +335,7 @@ class VeterinaCosmetics {
                         alert('❌ Помилка: '+(data.error||'Невідома помилка'));
                     }
                 } catch(err){
-                    console.error(err); 
+                    console.error('🔍 ДИАГНОСТИКА: Ошибка fetch:', err);
                     alert('❌ Помилка мережі. Спробуйте ще раз.');
                 }
 
