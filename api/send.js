@@ -2,134 +2,79 @@
 const https = require('https');
 
 module.exports = async (req, res) => {
-  // Разрешаем CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Метод не разрешен' });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    // Получаем тело запроса как в рабочем проекте
     let body = '';
-    for await (const chunk of req) {
-      body += chunk;
-    }
-    
-    const formData = JSON.parse(body);
-    console.log('Получены данные:', formData);
+    req.on('data', chunk => body += chunk);
+    req.on('end', async () => {
+      try {
+        const { name, phone, product, email = '', quantity = '1', message = '' } = JSON.parse(body);
+        
+        if (!name || !phone || !product) {
+          return res.json({ success: false, error: 'Заповніть обовʼязкові поля' });
+        }
 
-    // Валидация обязательных полей
-    if (!formData.name || !formData.phone || !formData.product) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Заповніть обовʼязкові поля: імʼя, телефон та товар' 
-      });
-    }
+        const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+        const CHAT_ID = process.env.CHAT_ID;
 
-    // Проверка переменных окружения
-    const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
-    const CHAT_ID = process.env.CHAT_ID;
+        if (!TELEGRAM_TOKEN || !CHAT_ID) {
+          return res.json({ success: false, error: 'Bot not configured' });
+        }
 
-    if (!TELEGRAM_TOKEN || !CHAT_ID) {
-      console.error('Missing environment variables');
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Бот не настроен' 
-      });
-    }
+        const telegramMessage = `
+НОВА ЗАЯВКА
+Ім'я: ${name}
+Телефон: ${phone}
+Email: ${email}
+Товар: ${product}
+Кількість: ${quantity}
+Повідомлення: ${message}
+        `.trim();
 
-    // Формируем сообщение для Telegram
-    const telegramMessage = `
-🎯 НОВА ЗАЯВКА НА БРОНЮВАННЯ
+        const data = JSON.stringify({
+          chat_id: CHAT_ID,
+          text: telegramMessage
+        });
 
-👤 Ім'я: ${formData.name}
-📞 Телефон: ${formData.phone}
-📧 Email: ${formData.email || 'Не вказано'}
+        const options = {
+          hostname: 'api.telegram.org',
+          port: 443,
+          path: `/bot${TELEGRAM_TOKEN}/sendMessage`,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': data.length
+          }
+        };
 
-🛍 Товар: ${formData.product}
-📦 Кількість: ${formData.quantity || '1'}
+        const req = https.request(options, (tgRes) => {
+          let response = '';
+          tgRes.on('data', chunk => response += chunk);
+          tgRes.on('end', () => {
+            const result = JSON.parse(response);
+            if (result.ok) {
+              res.json({ success: true, message: 'Заявку успішно відправлено!' });
+            } else {
+              res.json({ success: false, error: 'Помилка відправки' });
+            }
+          });
+        });
 
-💬 Повідомлення: ${formData.message || 'Не вказано'}
+        req.on('error', () => res.json({ success: false, error: 'Помилка сервера' }));
+        req.write(data);
+        req.end();
 
-⏰ Час: ${new Date().toLocaleString('uk-UA')}
-    `.trim();
-
-    console.log('Отправляем в Telegram:', telegramMessage);
-
-    // Отправка в Telegram
-    const telegramResult = await sendToTelegram(TELEGRAM_TOKEN, CHAT_ID, telegramMessage);
-    
-    if (telegramResult.ok) {
-      console.log('✅ Заявка успешно отправлена в Telegram');
-      return res.status(200).json({ 
-        success: true,
-        message: 'Заявку успішно відправлено! Ми звʼяжемося з вами найближчим часом.'
-      });
-    } else {
-      console.error('❌ Ошибка Telegram:', telegramResult);
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Помилка відправки повідомлення' 
-      });
-    }
-
-  } catch (error) {
-    console.error('❌ Server error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Внутрішня помилка сервера: ' + error.message 
+      } catch (e) {
+        res.json({ success: false, error: 'Невірний формат даних' });
+      }
     });
+  } catch (error) {
+    res.json({ success: false, error: 'Помилка сервера' });
   }
 };
-
-// Функция отправки в Telegram
-function sendToTelegram(token, chatId, message) {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify({
-      chat_id: chatId,
-      text: message
-    });
-    
-    const options = {
-      hostname: 'api.telegram.org',
-      port: 443,
-      path: `/bot${token}/sendMessage`,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(data)
-      }
-    };
-    
-    const req = https.request(options, (res) => {
-      let responseData = '';
-      
-      res.on('data', (chunk) => {
-        responseData += chunk;
-      });
-      
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(responseData);
-          resolve(parsed);
-        } catch (e) {
-          reject(e);
-        }
-      });
-    });
-    
-    req.on('error', (error) => {
-      reject(error);
-    });
-    
-    req.write(data);
-    req.end();
-  });
-}
