@@ -430,31 +430,24 @@ class VeterinaCosmetics {
         this.setButtonLoading(submitBtn, true);
 
         try {
-            // Временно сохраняем заявку в консоль
-            console.log('📦 Заявка:', formData);
-            
-            // Показываем успех без отправки на сервер
-            this.showNotification('success', '✅ Заявку успішно відправлено! Ми звʼяжемося з вами найближчим часом.');
-            document.getElementById('bookingForm').reset();
-            this.toggleBooking(false);
-            
-            /* Раскомментируй когда настроишь Telegram бота:
             const response = await fetch('/api/send', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify(formData)
             });
             
             const data = await response.json();
             
             if (data.success) {
-                this.showNotification('success', data.message || '✅ Заявку успішно відправлено!');
+                this.showNotification('success', data.message || '✅ Заявку успішно відправлено! Ми звʼяжемося з вами найближчим часом.');
                 document.getElementById('bookingForm').reset();
                 this.toggleBooking(false);
             } else {
                 this.showNotification('error', data.error || '❌ Помилка відправки заявки');
             }
-            */
             
         } catch (error) {
             console.error('Помилка:', error);

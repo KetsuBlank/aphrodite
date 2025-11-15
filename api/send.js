@@ -1,4 +1,7 @@
+const https = require('https');
+
 module.exports = async (req, res) => {
+  // Разрешаем CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -28,9 +31,9 @@ module.exports = async (req, res) => {
 
     if (!TELEGRAM_TOKEN || !CHAT_ID) {
       console.log('Missing environment variables');
-      return res.status(200).json({ 
+      return res.status(500).json({ 
         success: false, 
-        error: 'Бот не настроен. Пожалуйста, сообщите администратору.' 
+        error: 'Бот не настроен' 
       });
     }
 
@@ -51,22 +54,10 @@ module.exports = async (req, res) => {
     `;
 
     // Отправка в Telegram
-    const telegramResponse = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: telegramMessage,
-        parse_mode: 'Markdown'
-      })
-    });
+    const telegramResponse = await sendToTelegram(TELEGRAM_TOKEN, CHAT_ID, telegramMessage);
 
-    const telegramData = await telegramResponse.json();
-
-    if (!telegramData.ok) {
-      console.error('Telegram API error:', telegramData);
+    if (!telegramResponse.ok) {
+      console.error('Telegram API error:', telegramResponse);
       return res.status(500).json({ 
         success: false, 
         error: 'Помилка відправки повідомлення' 
@@ -88,3 +79,49 @@ module.exports = async (req, res) => {
     });
   }
 };
+
+// Функция отправки в Telegram
+function sendToTelegram(token, chatId, message) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify({
+      chat_id: chatId,
+      text: message,
+      parse_mode: 'Markdown'
+    });
+    
+    const options = {
+      hostname: 'api.telegram.org',
+      port: 443,
+      path: `/bot${token}/sendMessage`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': data.length
+      }
+    };
+    
+    const req = https.request(options, (res) => {
+      let responseData = '';
+      
+      res.on('data', (chunk) => {
+        responseData += chunk;
+      });
+      
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(responseData);
+          resolve(parsed);
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+    
+    req.on('error', (error) => {
+      reject(error);
+    });
+    
+    req.write(data);
+    req.end();
+  });
+}
