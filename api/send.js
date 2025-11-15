@@ -1,14 +1,7 @@
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
-  // Разрешаем CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
 
   const token = process.env.TELEGRAM_TOKEN;
   const chatId = process.env.CHAT_ID;
@@ -19,7 +12,6 @@ module.exports = async (req, res) => {
 
   const { name, email, phone, service, budget, deadline, message } = req.body;
 
-  // УБРАНА ПРОВЕРКА НА ОБЯЗАТЕЛЬНЫЕ ПОЛЯ КАК В РАБОЧЕМ ВАРИАНТЕ
   const text = `
 🎬 Нова заявка з ВЕТРИНА COSMETICS!
 

@@ -1,4 +1,102 @@
-// ВЕТРИНА COSMETICS - Website with Telegram Booking
+// Валидация телефона
+function validatePhone(phone) {
+    const phoneRegex = /^(\+38|38|0)?\d{9}$/;
+    const cleanedPhone = phone.replace(/\D/g, '');
+    return phoneRegex.test(cleanedPhone) && cleanedPhone.length >= 9;
+}
+
+// Обработчик для телефона
+document.getElementById('phone').addEventListener('input', function(e) {
+    const phone = e.target.value;
+    const phoneGroup = document.getElementById('phoneGroup');
+    const phoneError = document.getElementById('phoneError');
+    
+    if (phone === '') {
+        phoneGroup.classList.remove('error', 'success');
+        phoneError.style.display = 'none';
+        return;
+    }
+    
+    if (validatePhone(phone)) {
+        phoneGroup.classList.remove('error');
+        phoneGroup.classList.add('success');
+        phoneError.style.display = 'none';
+    } else {
+        phoneGroup.classList.remove('success');
+        phoneGroup.classList.add('error');
+        phoneError.style.display = 'block';
+    }
+});
+
+// Обработка формы
+document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        service: document.getElementById('product').value,
+        budget: document.getElementById('quantity').value,
+        deadline: '',
+        message: document.getElementById('message').value
+    };
+    
+    // Валидация обязательных полей
+    if (!formData.name || !formData.phone || !formData.service) {
+        alert('Будь ласка, заповніть обовʼязкові поля');
+        return;
+    }
+    
+    // Валидация телефона
+    if (formData.phone && !validatePhone(formData.phone)) {
+        alert('Будь ласка, введіть коректний номер телефону');
+        return;
+    }
+    
+    const submitBtn = this.querySelector('.btn-primary');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoading = submitBtn.querySelector('.btn-loading');
+    
+    btnText.style.display = 'none';
+    btnLoading.style.display = 'flex';
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetch('/api/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        console.log('Ответ сервера:', data);
+        
+        if (data.success) {
+            alert('✅ Заявку успішно відправлено!');
+            document.getElementById('bookingForm').reset();
+            
+            // Закрываем модалку
+            const bookingModal = document.getElementById('bookingModal');
+            const modalOverlay = document.getElementById('modalOverlay');
+            if (bookingModal) bookingModal.classList.remove('active');
+            if (modalOverlay) modalOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        } else {
+            alert('❌ Помилка: ' + (data.error || 'Невідома помилка'));
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('❌ Помилка мережі. Спробуйте ще раз.');
+    }
+    
+    // Восстанавливаем кнопку
+    btnText.style.display = 'block';
+    btnLoading.style.display = 'none';
+    submitBtn.disabled = false;
+});
+
+// Остальной функционал сайта (категории, товары и т.д.)
 class VeterinaCosmetics {
     constructor() {
         this.currentCategory = 'all';
@@ -67,7 +165,6 @@ class VeterinaCosmetics {
             this.setupPreloader();
             this.loadProducts();
             this.setupEventListeners();
-            this.setupOrderForm();
             console.log('✅ Veterina initialized');
         } catch (error) {
             console.error('❌ Init error:', error);
@@ -263,85 +360,6 @@ class VeterinaCosmetics {
         modals.forEach(modal=>modal.classList.remove('active'));
         if(modalOverlay) modalOverlay.classList.remove('active');
         document.body.style.overflow='';
-    }
-
-    // ========== ФОРМА БРОНЮВАННЯ ==========
-    setupOrderForm() {
-        const form = document.getElementById('bookingForm');
-        const phoneInput = document.getElementById('phone');
-        const phoneGroup = document.getElementById('phoneGroup');
-        const phoneError = document.getElementById('phoneError');
-
-        function validatePhone(phone) {
-            const cleaned = phone.replace(/\D/g,'');
-            return cleaned.length >= 9 && cleaned.length <= 12;
-        }
-
-        if(phoneInput){
-            phoneInput.addEventListener('input', e=>{
-                const val=e.target.value;
-                if(val===''){phoneGroup.classList.remove('error','success'); phoneError.style.display='none'; return;}
-                if(validatePhone(val)){phoneGroup.classList.remove('error'); phoneGroup.classList.add('success'); phoneError.style.display='none';}
-                else{phoneGroup.classList.remove('success'); phoneGroup.classList.add('error'); phoneError.style.display='block';}
-            });
-        }
-
-        if(form){
-            form.addEventListener('submit', async e=>{
-                e.preventDefault();
-                const formData={
-                    name:document.getElementById('name').value.trim(),
-                    email:document.getElementById('email').value.trim(),
-                    phone:document.getElementById('phone').value.trim(),
-                    service:document.getElementById('product').value,
-                    budget:document.getElementById('quantity').value,
-                    deadline:'',
-                    message:document.getElementById('message').value.trim()
-                };
-
-                console.log('🔍 ДИАГНОСТИКА: Отправка данных:', formData);
-
-                if(!formData.name||!formData.phone||!formData.service){
-                    alert('Заповніть обовʼязкові поля: імʼя, телефон та товар'); return;
-                }
-
-                if(!validatePhone(formData.phone)){alert('Будь ласка, введіть коректний номер телефону'); return;}
-
-                const submitBtn=form.querySelector('.btn-primary');
-                const btnText=submitBtn.querySelector('.btn-text');
-                const btnLoading=submitBtn.querySelector('.btn-loading');
-                
-                btnText.style.display='none';
-                btnLoading.style.display='flex';
-                submitBtn.disabled=true;
-
-                try{
-                    const response=await fetch('/api/send',{
-                        method:'POST',
-                        headers:{'Content-Type':'application/json'},
-                        body:JSON.stringify(formData)
-                    });
-                    
-                    const data=await response.json();
-                    console.log('🔍 ДИАГНОСТИКА: Ответ сервера:', data);
-                    
-                    if(data.success){
-                        alert('✅ Заявку успішно відправлено!'); 
-                        form.reset(); 
-                        this.toggleBooking(false);
-                    } else {
-                        alert('❌ Помилка: '+(data.error||'Невідома помилка'));
-                    }
-                } catch(err){
-                    console.error('❌ Ошибка:', err);
-                    alert('❌ Помилка мережі. Спробуйте ще раз.');
-                }
-
-                btnText.style.display='block';
-                btnLoading.style.display='none';
-                submitBtn.disabled=false;
-            });
-        }
     }
 }
 
