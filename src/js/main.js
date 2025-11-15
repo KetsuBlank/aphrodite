@@ -42,15 +42,17 @@ document.getElementById('orderForm').addEventListener('submit', async function(e
         message: document.getElementById('message').value
     };
     
+    console.log('🔍 ДАННЫЕ ФОРМЫ:', formData);
+    
     // Валидация обязательных полей
     if (!formData.name || !formData.phone || !formData.service) {
-        alert('Будь ласка, заповніть обовʼязкові поля');
+        alert('❌ Заповніть обовʼязкові поля: імʼя, телефон та товар');
         return;
     }
     
     // Валидация телефона
     if (formData.phone && !validatePhone(formData.phone)) {
-        alert('Будь ласка, введіть коректний номер телефону');
+        alert('❌ Будь ласка, введіть коректний номер телефону');
         return;
     }
     
@@ -63,14 +65,25 @@ document.getElementById('orderForm').addEventListener('submit', async function(e
     submitBtn.disabled = true;
 
     try {
-        const response = await fetch('/api/send.js', {
+        console.log('🔍 ОТПРАВКА НА API...');
+        const apiUrl = '/api/send.js';
+        console.log('🔍 API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
         });
         
+        console.log('🔍 СТАТУС ОТВЕТА:', response.status);
+        console.log('🔍 URL ОТВЕТА:', response.url);
+        
+        if (!response.ok) {
+            throw new Error(`❌ HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        console.log('Ответ сервера:', data);
+        console.log('🔍 ОТВЕТ API:', data);
         
         if (data.success) {
             alert('✅ Заявку успішно відправлено!');
@@ -83,11 +96,20 @@ document.getElementById('orderForm').addEventListener('submit', async function(e
             if (modalOverlay) modalOverlay.classList.remove('active');
             document.body.style.overflow = '';
         } else {
-            alert('❌ Помилка: ' + (data.error || 'Невідома помилка'));
+            alert(`❌ Помилка API: ${data.error || 'Невідома помилка'}`);
         }
     } catch (error) {
-        console.error('Ошибка:', error);
-        alert('❌ Помилка мережі. Спробуйте ще раз.');
+        console.error('❌ ОШИБКА FETCH:', error);
+        
+        if (error.message.includes('404')) {
+            alert('❌ API endpoint не найден (404). Проверьте путь к API.');
+        } else if (error.message.includes('Failed to fetch')) {
+            alert('❌ Не удалось подключиться к серверу. Проверьте интернет.');
+        } else if (error.message.includes('JSON')) {
+            alert('❌ Сервер вернул не JSON ответ. Проверьте API endpoint.');
+        } else {
+            alert(`❌ Ошибка сети: ${error.message}`);
+        }
     }
     
     // Восстанавливаем кнопку
