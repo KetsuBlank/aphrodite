@@ -29,7 +29,7 @@ document.getElementById('phone').addEventListener('input', function(e) {
 });
 
 // Обработка формы
-document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+document.getElementById('orderForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
     const formData = {
@@ -74,7 +74,7 @@ document.getElementById('bookingForm').addEventListener('submit', async function
         
         if (data.success) {
             alert('✅ Заявку успішно відправлено!');
-            document.getElementById('bookingForm').reset();
+            document.getElementById('orderForm').reset();
             
             // Закрываем модалку
             const bookingModal = document.getElementById('bookingModal');
@@ -96,7 +96,7 @@ document.getElementById('bookingForm').addEventListener('submit', async function
     submitBtn.disabled = false;
 });
 
-// Остальной функционал сайта (категории, товары и т.д.)
+// Остальной функционал сайта
 class VeterinaCosmetics {
     constructor() {
         this.currentCategory = 'all';
