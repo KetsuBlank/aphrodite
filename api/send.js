@@ -17,16 +17,17 @@ module.exports = async (req, res) => {
   }
 
   const text = `
-Новий заказ:
+🎬 Нова заявка з ВЕТРИНА COSMETICS!
+
 Ім'я: ${name}
 Email: ${email || 'не вказано'}
 Телефон: ${phone || 'не вказано'}
-Послуга: ${service}
+Товар: ${service}
 Бюджет: ${budget || 'не вказано'}
 Терміни: ${deadline || 'не вказано'}
-Опис проекту:
+Повідомлення:
 ${message}
-`;
+  `.trim();
 
   try {
     const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -34,7 +35,8 @@ ${message}
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: chatId,
-        text
+        text: text,
+        parse_mode: 'HTML'
       })
     });
 
@@ -43,4 +45,10 @@ ${message}
     if (data.ok) {
       return res.status(200).json({ success: true, message: 'Заявку успішно відправлено!' });
     } else {
-      return res.status(500).json({ success: false, error: data.description || 'Помил
+      return res.status(500).json({ success: false, error: data.description || 'Помилка відправки в Telegram' });
+    }
+  } catch (error) {
+    console.error('Telegram error:', error);
+    return res.status(500).json({ success: false, error: 'Помилка сервера' });
+  }
+};

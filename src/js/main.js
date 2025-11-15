@@ -67,7 +67,7 @@ class VeterinaCosmetics {
             this.setupPreloader();
             this.loadProducts();
             this.setupEventListeners();
-            this.setupOrderForm(); // исправленная форма бронирования
+            this.setupOrderForm();
             console.log('✅ Veterina initialized');
         } catch (error) {
             console.error('❌ Init error:', error);
@@ -238,7 +238,7 @@ class VeterinaCosmetics {
     }
 
     quickBook(productName) {
-        const productSelect = document.getElementById('service');
+        const productSelect = document.getElementById('product');
         if (productSelect) {
             const optionExists = Array.from(productSelect.options).some(option => option.value === productName);
             if (optionExists) productSelect.value = productName;
@@ -267,7 +267,7 @@ class VeterinaCosmetics {
 
     // ========== ФОРМА БРОНЮВАННЯ ==========
     setupOrderForm() {
-        const form = document.getElementById('orderForm');
+        const form = document.getElementById('bookingForm');
         const phoneInput = document.getElementById('phone');
         const phoneGroup = document.getElementById('phoneGroup');
         const phoneError = document.getElementById('phoneError');
@@ -293,20 +293,25 @@ class VeterinaCosmetics {
                     name:document.getElementById('name').value.trim(),
                     email:document.getElementById('email').value.trim(),
                     phone:document.getElementById('phone').value.trim(),
-                    service:document.getElementById('service').value,
-                    budget:document.getElementById('budget').value,
-                    deadline:document.getElementById('deadline').value,
+                    service:document.getElementById('product').value,
+                    budget:document.getElementById('quantity').value,
+                    deadline:'',
                     message:document.getElementById('message').value.trim()
                 };
 
                 if(!formData.name||!formData.phone||!formData.service){
-                    alert('Заповніть обовʼязкові поля: імʼя, телефон та послугу'); return;
+                    alert('Заповніть обовʼязкові поля: імʼя, телефон та товар'); return;
                 }
 
                 if(!validatePhone(formData.phone)){alert('Будь ласка, введіть коректний номер телефону'); return;}
 
-                const submitBtn=form.querySelector('.submit-btn');
-                submitBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Відправка...'; submitBtn.disabled=true;
+                const submitBtn=form.querySelector('.btn-primary');
+                const btnText=submitBtn.querySelector('.btn-text');
+                const btnLoading=submitBtn.querySelector('.btn-loading');
+                
+                btnText.style.display='none';
+                btnLoading.style.display='flex';
+                submitBtn.disabled=true;
 
                 try{
                     const response=await fetch('/api/send',{
@@ -315,13 +320,21 @@ class VeterinaCosmetics {
                         body:JSON.stringify(formData)
                     });
                     const data=await response.json();
-                    if(data.success){alert('✅ Заявку успішно відправлено!'); form.reset(); this.toggleBooking(false);}
-                    else{alert('❌ Помилка: '+(data.error||'Невідома помилка'));}
+                    if(data.success){
+                        alert('✅ Заявку успішно відправлено!'); 
+                        form.reset(); 
+                        this.toggleBooking(false);
+                    } else {
+                        alert('❌ Помилка: '+(data.error||'Невідома помилка'));
+                    }
                 } catch(err){
-                    console.error(err); alert('❌ Помилка мережі. Спробуйте ще раз.');
+                    console.error(err); 
+                    alert('❌ Помилка мережі. Спробуйте ще раз.');
                 }
 
-                submitBtn.innerHTML='<i class="fas fa-paper-plane"></i> Надіслати заявку'; submitBtn.disabled=false;
+                btnText.style.display='block';
+                btnLoading.style.display='none';
+                submitBtn.disabled=false;
             });
         }
     }
