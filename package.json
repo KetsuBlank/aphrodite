@@ -1,12 +1,7 @@
 {
   "name": "veterina-cosmetics",
-  "version": "1.0.0", 
-  "description": "Veterina cosmetics website with Telegram booking",
-  "main": "src/index.html",
-  "scripts": {
-    "build": "gulp build",
-    "dev": "gulp"
-  },
+  "version": "1.0.0",
+  "scripts": { "build": "gulp build", "dev": "gulp" },
   "devDependencies": {
     "gulp": "^4.0.2",
     "gulp-concat": "^2.6.1",

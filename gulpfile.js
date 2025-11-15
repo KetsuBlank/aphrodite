@@ -4,32 +4,24 @@ const uglify = require('gulp-uglify');
 const cleanCSS = require('gulp-clean-css');
 const autoprefixer = require('gulp-autoprefixer');
 
-// Объединение и минификация CSS
-gulp.task('styles', function() {
-    return gulp.src([
-        'src/css/style.css'
-    ])
-    .pipe(concat('styles.css'))  // ← ИМЯ БЕЗ .min
-    .pipe(autoprefixer())
-    .pipe(cleanCSS())
-    .pipe(gulp.dest('dist/'));   // ← В КОРЕНЬ dist
-});
+gulp.task('styles', () =>
+    gulp.src(['src/css/style.css'])
+        .pipe(concat('styles.css'))
+        .pipe(autoprefixer())
+        .pipe(cleanCSS())
+        .pipe(gulp.dest('dist/'))
+);
 
-// Объединение и минификация JS  
-gulp.task('scripts', function() {
-    return gulp.src([
-        'src/js/main.js'
-    ])
-    .pipe(concat('main.js'))     // ← ИМЯ БЕЗ .min
-    .pipe(uglify())
-    .pipe(gulp.dest('dist/'));   // ← В КОРЕНЬ dist
-});
+gulp.task('scripts', () =>
+    gulp.src(['src/js/main.js'])
+        .pipe(concat('main.js'))
+        .pipe(uglify())
+        .pipe(gulp.dest('dist/'))
+);
 
-// Копирование HTML
-gulp.task('html', function() {
-    return gulp.src('src/*.html')
-        .pipe(gulp.dest('dist/'));
-});
+gulp.task('html', () =>
+    gulp.src('src/*.html')
+        .pipe(gulp.dest('dist/'))
+);
 
-// Сборка проекта
 gulp.task('build', gulp.parallel('styles', 'scripts', 'html'));

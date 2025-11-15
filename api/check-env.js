@@ -1,19 +1,21 @@
 // api/check-env.js
-module.exports = async (req, res) => {
+module.exports = async function handler(req, res) {
+  // Простая CORS — если нужно, дополни origin конкретным доменом
   res.setHeader('Access-Control-Allow-Origin', '*');
-  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
   const token = process.env.TELEGRAM_TOKEN;
   const chatId = process.env.CHAT_ID;
-  
-  console.log('Token exists:', !!token);
-  console.log('Chat ID exists:', !!chatId);
-  
-  // Проверим формат токена (первые 10 символов)
-  console.log('Token preview:', token ? token.substring(0, 10) + '...' : 'MISSING');
-  
-  return res.status(200).json({ 
-    telegram_token: token ? 'SET (' + token.substring(0, 10) + '...)' : 'MISSING',
+
+  const ready = !!token && !!chatId;
+
+  return res.status(200).json({
+    telegram_token: token ? `SET (${String(token).substring(0, 10)}...)` : 'MISSING',
     chat_id: chatId || 'MISSING',
-    status: token && chatId ? 'READY' : 'MISSING_VARS'
+    status: ready ? 'READY' : 'MISSING_VARS',
+    message: ready ? 'Telegram налаштовано' : 'Telegram bot token або chat_id відсутні. Форма бронювання буде недоступна.'
   });
 };

@@ -5,14 +5,15 @@ class VeterinaCosmetics {
         this.products = [];
         this.filteredProducts = [];
         this.sortBy = 'default';
-        
+        this.apiReady = false; // флаг доступности Telegram
+
         this.productsData = this.initializeProductsData();
         this.init();
     }
 
     // Product Database
     brands = ['L\'Oreal', 'Nivea', 'Garnier', 'Dove', 'Maybelline', 'Revlon'];
-    
+
     categories = {
         'face': 'Догляд за обличчям',
         'hair': 'Догляд за волоссям', 
@@ -23,13 +24,13 @@ class VeterinaCosmetics {
     initializeProductsData() {
         const allProducts = [];
         const categories = ['face', 'hair', 'body', 'makeup'];
-        
+
         categories.forEach(category => {
             for (let i = 1; i <= 6; i++) {
                 const brand = this.brands[Math.floor(Math.random() * this.brands.length)];
                 const price = Math.floor(Math.random() * 1000) + 100;
                 const isNew = Math.random() > 0.7;
-                
+
                 allProducts.push({
                     id: `${category}-${i}`,
                     name: `${this.getProductName(category, i)} ${brand}`,
@@ -67,9 +68,10 @@ class VeterinaCosmetics {
     }
 
     // Initialization
-    init() {
+    async init() {
         try {
             this.setupPreloader();
+            await this.checkAPI();
             this.loadProducts();
             this.setupEventListeners();
             console.log('✅ Veterina initialized');
@@ -82,9 +84,7 @@ class VeterinaCosmetics {
     setupPreloader() {
         const preloader = document.getElementById('preloader');
         if (preloader) {
-            setTimeout(() => {
-                this.hidePreloader();
-            }, 1500);
+            setTimeout(() => this.hidePreloader(), 1500);
         }
     }
 
@@ -93,6 +93,23 @@ class VeterinaCosmetics {
         if (preloader) {
             preloader.classList.add('fade-out');
             setTimeout(() => preloader.remove(), 500);
+        }
+    }
+
+    async checkAPI() {
+        try {
+            const response = await fetch('/api/check-env');
+            const data = await response.json();
+
+            if (data.status === 'READY') {
+                this.apiReady = true;
+            } else {
+                this.apiReady = false;
+                console.warn('⚠️ Telegram bot not configured. Booking will be disabled.');
+            }
+        } catch (error) {
+            this.apiReady = false;
+            console.warn('⚠️ Error checking API:', error);
         }
     }
 
@@ -110,7 +127,7 @@ class VeterinaCosmetics {
                 e.preventDefault();
                 const category = e.target.dataset.category;
                 this.showCategory(category);
-                
+
                 navLinks.forEach(l => l.classList.remove('active'));
                 e.target.classList.add('active');
             });
@@ -121,22 +138,17 @@ class VeterinaCosmetics {
             card.addEventListener('click', (e) => {
                 const category = e.currentTarget.dataset.category;
                 this.showCategory(category);
-                
+
                 navLinks.forEach(l => {
                     l.classList.remove('active');
-                    if (l.dataset.category === category) {
-                        l.classList.add('active');
-                    }
+                    if (l.dataset.category === category) l.classList.add('active');
                 });
             });
         });
 
-        // Добавляем обработчик для кнопки в герое
         const catalogBtn = document.getElementById('catalogBtn');
         if (catalogBtn) {
-            catalogBtn.addEventListener('click', () => {
-                this.showCategory('all');
-            });
+            catalogBtn.addEventListener('click', () => this.showCategory('all'));
         }
     }
 
@@ -149,10 +161,8 @@ class VeterinaCosmetics {
         if (closeBooking) closeBooking.addEventListener('click', () => this.toggleBooking());
         if (modalOverlay) modalOverlay.addEventListener('click', () => this.closeAllModals());
 
-        // Form validation
         this.setupFormValidation();
-        
-        // Form submission
+
         const bookingForm = document.getElementById('bookingForm');
         if (bookingForm) {
             bookingForm.addEventListener('submit', (e) => this.handleBooking(e));
@@ -162,26 +172,21 @@ class VeterinaCosmetics {
     setupFormValidation() {
         const phoneInput = document.getElementById('phone');
         if (phoneInput) {
-            phoneInput.addEventListener('input', (e) => {
-                this.validatePhone(e.target.value);
-            });
+            phoneInput.addEventListener('input', (e) => this.validatePhone(e.target.value));
         }
     }
 
     validatePhone(phone) {
         const phoneGroup = document.getElementById('phoneGroup');
         const phoneError = document.getElementById('phoneError');
-        
+
         if (!phone) {
             phoneGroup.classList.remove('error', 'success');
             phoneError.style.display = 'none';
             return false;
         }
-        
-        // Упрощенная валидация - проверяем что номер содержит достаточно цифр
+
         const cleanedPhone = phone.replace(/\D/g, '');
-        
-        // Украинские номера: 9 цифр без кода или 12 цифр с кодом
         if (cleanedPhone.length >= 9 && cleanedPhone.length <= 12) {
             phoneGroup.classList.remove('error');
             phoneGroup.classList.add('success');
@@ -198,7 +203,7 @@ class VeterinaCosmetics {
     setupMobileMenu() {
         const burger = document.getElementById('burgerToggle');
         const nav = document.querySelector('.nav');
-        
+
         if (burger && nav) {
             burger.addEventListener('click', () => {
                 nav.classList.toggle('active');
@@ -218,17 +223,16 @@ class VeterinaCosmetics {
         }
     }
 
-    // Core functionality
     loadProducts() {
         this.showLoadingState();
-        
+
         setTimeout(() => {
             if (this.currentCategory === 'all') {
                 this.products = this.productsData;
             } else {
                 this.products = this.productsData.filter(p => p.category === this.currentCategory);
             }
-            
+
             this.filteredProducts = [...this.products];
             this.sortProducts();
             this.displayProducts();
@@ -267,28 +271,20 @@ class VeterinaCosmetics {
             return;
         }
 
-        grid.innerHTML = this.filteredProducts.map(product => {
-            return this.createProductCard(product);
-        }).join('');
+        grid.innerHTML = this.filteredProducts.map(product => this.createProductCard(product)).join('');
     }
 
     createProductCard(product) {
         return `
             <div class="product-card" onclick="veterina.quickBook('${product.name}')">
                 ${product.isNew ? `<div class="product-badge new">NEW</div>` : ''}
-                
-                <div class="product-image">
-                    ${product.image}
-                </div>
-                
+                <div class="product-image">${product.image}</div>
                 <div class="product-content">
                     <h3 class="product-title">${product.name}</h3>
                     <div class="product-brand">${product.brand}</div>
-                    
                     <div class="product-price">
                         <span class="price-current">${this.formatPrice(product.price)}</span>
                     </div>
-                    
                     <div class="product-actions">
                         <button class="add-to-cart" onclick="event.stopPropagation(); veterina.quickBook('${product.name}')">
                             ${!product.inStock ? 'Немає в наявності' : 'Забронювати'}
@@ -300,50 +296,36 @@ class VeterinaCosmetics {
     }
 
     formatPrice(price) {
-        return new Intl.NumberFormat('uk-UA', {
-            style: 'currency',
-            currency: 'UAH',
-            minimumFractionDigits: 0
-        }).format(price);
+        return new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH', minimumFractionDigits: 0 }).format(price);
     }
 
     sortProducts() {
         let sorted = [...this.filteredProducts];
-        
+
         switch(this.sortBy) {
             case 'price-asc':
-                sorted.sort((a, b) => a.price - b.price);
+                sorted.sort((a,b) => a.price - b.price);
                 break;
             case 'price-desc':
-                sorted.sort((a, b) => b.price - a.price);
+                sorted.sort((a,b) => b.price - a.price);
                 break;
             case 'name':
-                sorted.sort((a, b) => a.name.localeCompare(b.name));
-                break;
-            default:
-                // Keep original order
+                sorted.sort((a,b) => a.name.localeCompare(b.name));
                 break;
         }
-        
+
         this.filteredProducts = sorted;
         this.displayProducts();
     }
 
-    // Category navigation
     showCategory(category) {
         this.currentCategory = category;
-        
+
         const title = document.getElementById('section-title');
-        if (title) {
-            if (category === 'all') {
-                title.textContent = 'Всі товари';
-            } else {
-                title.textContent = this.categories[category] || 'Товари';
-            }
-        }
+        if (title) title.textContent = category === 'all' ? 'Всі товари' : this.categories[category] || 'Товари';
 
         this.loadProducts();
-        
+
         const nav = document.querySelector('.nav');
         const burger = document.getElementById('burgerToggle');
         if (nav && burger && window.innerWidth <= 768) {
@@ -353,33 +335,27 @@ class VeterinaCosmetics {
         }
     }
 
-    // Quick booking
     quickBook(productName) {
+        if (!this.apiReady) {
+            this.showNotification('error', '⚠️ Форма бронювання недоступна. Telegram бот не налаштований.');
+            return;
+        }
+
         const productSelect = document.getElementById('product');
         if (productSelect) {
-            // Check if product exists in select options
             const optionExists = Array.from(productSelect.options).some(option => option.value === productName);
-            if (optionExists) {
-                productSelect.value = productName;
-            } else {
-                // Add new option if doesn't exist
-                const newOption = new Option(productName, productName);
-                productSelect.add(newOption);
-                productSelect.value = productName;
-            }
+            if (!optionExists) productSelect.add(new Option(productName, productName));
+            productSelect.value = productName;
         }
         this.toggleBooking(true);
     }
 
-    // Booking modal
     toggleBooking(show = null) {
         const bookingModal = document.getElementById('bookingModal');
         const modalOverlay = document.getElementById('modalOverlay');
-        
-        if (show === null) {
-            show = !bookingModal?.classList.contains('active');
-        }
-        
+
+        if (show === null) show = !bookingModal?.classList.contains('active');
+
         if (bookingModal && modalOverlay) {
             if (show) {
                 bookingModal.classList.add('active');
@@ -394,18 +370,20 @@ class VeterinaCosmetics {
     }
 
     closeAllModals() {
-        const modals = document.querySelectorAll('.booking-modal');
+        document.querySelectorAll('.booking-modal').forEach(modal => modal.classList.remove('active'));
         const modalOverlay = document.getElementById('modalOverlay');
-        
-        modals.forEach(modal => modal.classList.remove('active'));
         if (modalOverlay) modalOverlay.classList.remove('active');
         document.body.style.overflow = '';
     }
 
-    // Handle booking form submission
     async handleBooking(e) {
         e.preventDefault();
-        
+
+        if (!this.apiReady) {
+            this.showNotification('error', '⚠️ Форма бронювання недоступна. Telegram бот не налаштований.');
+            return;
+        }
+
         const formData = {
             name: document.getElementById('name').value.trim(),
             email: document.getElementById('email').value.trim(),
@@ -414,67 +392,59 @@ class VeterinaCosmetics {
             quantity: document.getElementById('quantity').value,
             message: document.getElementById('message').value.trim()
         };
-        
-        // Validation
+
         if (!formData.name || !formData.phone || !formData.product) {
             this.showNotification('error', 'Заповніть обовʼязкові поля: імʼя, телефон та товар');
             return;
         }
-        
+
         if (!this.validatePhone(formData.phone)) {
             this.showNotification('error', 'Будь ласка, введіть коректний номер телефону');
             return;
         }
-        
+
         const submitBtn = document.getElementById('submitBtn');
         this.setButtonLoading(submitBtn, true);
 
         try {
             const response = await fetch('/api/send', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify(formData)
             });
-            
             const data = await response.json();
-            
+
             if (data.success) {
-                this.showNotification('success', data.message || '✅ Заявку успішно відправлено! Ми звʼяжемося з вами найближчим часом.');
+                this.showNotification('success', data.message || '✅ Заявку успішно відправлено!');
                 document.getElementById('bookingForm').reset();
                 this.toggleBooking(false);
             } else {
                 this.showNotification('error', data.error || '❌ Помилка відправки заявки');
             }
-            
         } catch (error) {
             console.error('Помилка:', error);
             this.showNotification('error', '❌ Помилка мережі. Спробуйте ще раз.');
         }
-        
+
         this.setButtonLoading(submitBtn, false);
     }
 
     setButtonLoading(button, isLoading) {
-        if (button) {
-            const btnText = button.querySelector('.btn-text');
-            const btnLoading = button.querySelector('.btn-loading');
-            
-            if (isLoading) {
-                btnText.style.display = 'none';
-                btnLoading.style.display = 'flex';
-                button.disabled = true;
-            } else {
-                btnText.style.display = 'flex';
-                btnLoading.style.display = 'none';
-                button.disabled = false;
-            }
+        if (!button) return;
+        const btnText = button.querySelector('.btn-text');
+        const btnLoading = button.querySelector('.btn-loading');
+
+        if (isLoading) {
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'flex';
+            button.disabled = true;
+        } else {
+            btnText.style.display = 'flex';
+            btnLoading.style.display = 'none';
+            button.disabled = false;
         }
     }
 
-    // Notification system
     showNotification(type, message) {
         const container = document.getElementById('notificationContainer');
         if (!container) return;
@@ -482,13 +452,11 @@ class VeterinaCosmetics {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.textContent = message;
-        
+
         container.appendChild(notification);
-        
+
         setTimeout(() => {
-            if (notification.parentElement) {
-                notification.remove();
-            }
+            if (notification.parentElement) notification.remove();
         }, 5000);
     }
 }
@@ -498,5 +466,5 @@ document.addEventListener('DOMContentLoaded', () => {
     window.veterina = new VeterinaCosmetics();
 });
 
-// Global functions for HTML onclick
+// Global function for HTML onclick
 window.showCategory = (category) => veterina?.showCategory(category);
