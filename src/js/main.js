@@ -63,7 +63,7 @@ document.getElementById('orderForm').addEventListener('submit', async function(e
     submitBtn.disabled = true;
 
     try {
-        const response = await fetch('/api/send', {
+        const response = await fetch('/api/send.js', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
