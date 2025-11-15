@@ -1,4 +1,6 @@
 // api/send.js
+const https = require('https');
+
 module.exports = async (req, res) => {
   // Разрешаем CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,8 +16,13 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const formData = req.body;
+    // Получаем тело запроса как в рабочем проекте
+    let body = '';
+    for await (const chunk of req) {
+      body += chunk;
+    }
     
+    const formData = JSON.parse(body);
     console.log('Получены данные:', formData);
 
     // Валидация обязательных полей
@@ -57,16 +64,16 @@ module.exports = async (req, res) => {
     console.log('Отправляем в Telegram:', telegramMessage);
 
     // Отправка в Telegram
-    const telegramResponse = await sendToTelegram(TELEGRAM_TOKEN, CHAT_ID, telegramMessage);
+    const telegramResult = await sendToTelegram(TELEGRAM_TOKEN, CHAT_ID, telegramMessage);
     
-    if (telegramResponse.ok) {
+    if (telegramResult.ok) {
       console.log('✅ Заявка успешно отправлена в Telegram');
       return res.status(200).json({ 
         success: true,
         message: 'Заявку успішно відправлено! Ми звʼяжемося з вами найближчим часом.'
       });
     } else {
-      console.error('❌ Ошибка Telegram:', telegramResponse);
+      console.error('❌ Ошибка Telegram:', telegramResult);
       return res.status(500).json({ 
         success: false, 
         error: 'Помилка відправки повідомлення' 
@@ -77,16 +84,14 @@ module.exports = async (req, res) => {
     console.error('❌ Server error:', error);
     return res.status(500).json({ 
       success: false, 
-      error: 'Внутрішня помилка сервера' 
+      error: 'Внутрішня помилка сервера: ' + error.message 
     });
   }
 };
 
-// Функция отправки в Telegram (такая же как в работающем коде)
+// Функция отправки в Telegram
 function sendToTelegram(token, chatId, message) {
   return new Promise((resolve, reject) => {
-    const https = require('https');
-    
     const data = JSON.stringify({
       chat_id: chatId,
       text: message
